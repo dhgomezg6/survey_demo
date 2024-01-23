@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import 'survey-core/defaultV2.min.css';
 import { Model } from 'survey-core';
 import { Survey } from 'survey-react-ui';
-import CarruselComponent from './CarrouselComponent';
+import { mainQuestion, 
+  workersOnTaskQuestion, 
+  suppliesOnTaskQuestion, 
+  createSurveyModel } from './utils/Questions';
 
 const Encuesta = () => {
   const [encuestaJson, setEncuestaJson] = useState(null);
@@ -32,44 +35,8 @@ const Encuesta = () => {
     }
   };
 
-  const surveyJson = {
-    "pages": [
-        {
-            name: 'actividadRealizada',
-            title: '¿Qué se hizo hoy?',
-            elements: [
-                {
-                    type: 'checkbox',
-                    name: 'actividad',
-                    title: '¿Qué se hizo hoy?',
-                    isRequired: true,
-                    colCount: 1,
 
-                    choices: ['Sembrar', 'Macanear', 'Fumigar', 
-                    'Abonar', 'Podar', 'Compras', 'Cosechar',
-                    'Preparaciones', 'Mantenimiento'],
-                  },
-            ]
-        },
-        
-    ]
-  }
-
-  const workersOnTaskQuestion = {
-    type: 'tagbox',
-    name: 'quienesHicieron',
-    closeOnSelect: true,
-    title: '¿Quiénes lo hicieron?',
-      choices: [
-        "Vicente", "Libardo"
-      ]
-  }
-
-  
-
-
-
-  const survey = new Model(surveyJson);
+  const survey = new Model(createSurveyModel('actividadRealizada', '¿Qué se hizo hoy?', [mainQuestion]));
   survey.onComplete.add(onCompleteSurvey)
 
 
@@ -83,17 +50,7 @@ const Encuesta = () => {
    
     {isPrincipalReady && seleccion.map(item => {
       if(item === 'Sembrar') {
-
-        const surveyJson2 = {
-          "pages": [
-          {
-            name: 'actividadSembrar',
-            title: 'Sembrar',
-            elements: [workersOnTaskQuestion,]
-          }
-          ]
-        }
-        
+        const surveyJson2 = createSurveyModel('actividadSembrar', item, [workersOnTaskQuestion, suppliesOnTaskQuestion])
         const secondarySurvey = new Model(surveyJson2);
         secondarySurvey.onComplete.add(onCompleteSecondarySurvey);
 
