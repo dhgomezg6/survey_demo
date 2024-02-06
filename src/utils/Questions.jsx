@@ -22,7 +22,7 @@ export const workersOnTaskQuestion = {
 
 export const suppliesOnTaskQuestion = {
     type: 'tagbox',
-    name: 'quienesHicieron',
+    name: 'conQueLoHicieron',
     closeOnSelect: true,
     title: '¿Con que lo hicieron?',
         choices: [

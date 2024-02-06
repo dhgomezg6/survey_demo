@@ -2,85 +2,84 @@ import React, { useState } from 'react';
 import 'survey-core/defaultV2.min.css';
 import { Model } from 'survey-core';
 import { Survey } from 'survey-react-ui';
-import { mainQuestion, 
-  workersOnTaskQuestion, 
-  suppliesOnTaskQuestion, 
-  createSurveyModel } from './utils/Questions';
+import { mainQuestion,  createSurveyModel } from './utils/Questions';
+
+import Composting from './components/Composting/index'
+import Fertilizing from './components/Fertilizing/index'
+import Harvesting from './components/Harvesting/index'
+import Maintenance from './components/Maintenance/index'
+import Planting from './components/Planting/index'
+import Pruning from './components/Pruning/index'
+import Spraying from './components/Spraying/index'
+import SuppliesPurchase from './components/SuppliesPurchase/index'
+import Thinning from './components/Thinning/index'
 
 const Encuesta = () => {
-  const [encuestaJson, setEncuestaJson] = useState(null);
+  const [surveyState, setSurveyState] = useState([]);
   const [isPrincipalReady, setIsPrincipalReady] = useState(false);
-  const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
+  const [result, setResult] = useState({});
 
-  const seleccion = ['Sembrar', 'Macanear', 'Fumigar']
+  let accionPendiente = surveyState.find(accion => !accion.Ready);
+  accionPendiente = accionPendiente? accionPendiente['Encuesta']: null; 
+  console.log(accionPendiente)
+  let survey = null;
 
   const onCompleteSurvey = (survey) => {
-    setEncuestaJson(survey.data);
+    const resultado = survey.data.actividad.map(accion => {
+      return { Encuesta: accion, Ready: false };
+    });
+    setSurveyState(resultado);
     setIsPrincipalReady(true);
-    // Puedes guardar el JSON resultante en tu backend o donde lo necesites.
   };
 
   const onCompleteSecondarySurvey = (survey) => {
-    // Aquí manejas el resultado de la encuesta secundaria
-    // Por ejemplo, guardarlo en el backend o actualizar el estado
-    console.log("Encuesta secundaria completada para: ", encuestaJson.actividad[currentActivityIndex]);
-    console.log("Respuesta: ", survey.data);
-
-    // Avanzar al siguiente slide o finalizar
-    if (currentActivityIndex < encuestaJson.actividad.length - 1) {
-      setCurrentActivityIndex(currentActivityIndex + 1);
-    } else {
-      // Todas las encuestas secundarias están completas
-      console.log("Todas las encuestas secundarias completadas");
-    }
+    // Update general result
+    result[accionPendiente] = survey;
+    setResult(result);
+    console.log("Result: ", result);
+    
+    // Update the intertal state of the survey
+    const _surveyState = surveyState.map(encuesta => {
+      if (encuesta.Encuesta === accionPendiente)
+          return { ...encuesta, Ready: true };
+      return encuesta;
+    });
+    console.log("Respuesta: ", survey);
+    setSurveyState(_surveyState);
   };
 
-
-  const survey = new Model(createSurveyModel('actividadRealizada', '¿Qué se hizo hoy?', [mainQuestion]));
-  survey.onComplete.add(onCompleteSurvey)
-
+  if(!isPrincipalReady) {
+    survey = new Model(createSurveyModel('actividadRealizada', '¿Qué se hizo hoy?', [mainQuestion]));
+    survey.onComplete.add(onCompleteSurvey)
+  } 
 
   return (
     <div>
-    {!isPrincipalReady && 
-      <div className='Survey-style'>
-        <Survey model={survey} /> 
-      </div>
-    }  
-   
-    {isPrincipalReady && seleccion.map(item => {
-      if(item === 'Sembrar') {
-        const surveyJson2 = createSurveyModel('actividadSembrar', item, [workersOnTaskQuestion, suppliesOnTaskQuestion])
-        const secondarySurvey = new Model(surveyJson2);
-        secondarySurvey.onComplete.add(onCompleteSecondarySurvey);
-
-        return <div className='Survey-style'>
-            <Survey model={secondarySurvey} /> 
-          </div>
-      }
-
-      const surveyJson3 = {
-        "pages": [
-        {
-          name: 'actividadSembrar',
-          title: `${item}`,
-          elements: [workersOnTaskQuestion,]
-        }
-        ]
-      }
-      
-      const thirdSurvey = new Model(surveyJson3);
-      thirdSurvey.onComplete.add(onCompleteSecondarySurvey);
-
-      return <div className='Survey-style'>
-          <Survey model={thirdSurvey} /> 
+      {!isPrincipalReady && survey &&
+        <div className='Survey-style'>
+          <Survey model={survey} /> 
         </div>
-    })}
+      }
 
-      {encuestaJson && (
+      {isPrincipalReady && accionPendiente && 
+        <div className='Survey-style'>
+          { accionPendiente === 'Preparaciones' && <Composting setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Abonar' && <Fertilizing setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Cosechar' && <Harvesting setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Mantenimiento' && <Maintenance setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Sembrar' && <Planting setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Podar' && <Pruning setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Fumigar' && <Spraying setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Compra' && <SuppliesPurchase setEncuestaJson={onCompleteSecondarySurvey} /> }
+          { accionPendiente === 'Macanear' && <Thinning setEncuestaJson={onCompleteSecondarySurvey} /> }
+        </div>
+      }
+
+
+      {surveyState && (
         <div>
           <h2>Resultado de la encuesta:</h2>
-          <pre>{JSON.stringify(encuestaJson, null, 2)}</pre>
+          <pre>{JSON.stringify(surveyState, null, 2)}</pre>
         </div>
       )}
     
